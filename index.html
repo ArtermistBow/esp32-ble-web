@@ -26,9 +26,9 @@
     </style>
 </head>
 <body>
-
+<!-- // navigator.bluetooth  -->
     <div class="farm-card">
-        <h1>🥔 Mr. Farmer 👨‍🌾</h1>
+        <h1>ESP32 WEB BLE</h1>
         <div id="statusLabel" class="status">Chưa kết nối Bluetooth</div>
 
         <button id="connectBtn">Kết nối hệ thống BOB</button>
@@ -60,7 +60,6 @@
     </div>
 
     <script>
-        // Copy chính xác UUID từ ESP32
         const SERVICE_UUID = "3d88d953-7f54-47e4-a374-0db3dab7ea7c";
         const TIME_CHAR_UUID = "b373a6bd-57ef-4ddb-801b-b08fda6c3fa7";
         const LED_CHAR_UUID = "98edf6bd-db03-4077-9dde-d85fd41ead83";
@@ -82,12 +81,12 @@
                 const server = await device.gatt.connect();
                 const service = await server.getPrimaryService(SERVICE_UUID);
 
-                // Lấy các Characteristic
+                // lay characteristic
                 timeChar = await service.getCharacteristic(TIME_CHAR_UUID);
                 ledChar = await service.getCharacteristic(LED_CHAR_UUID);
                 sensorChar = await service.getCharacteristic(SENSOR_CHAR_UUID);
 
-                statusLabel.innerText = "Đã kết nối với Nông Trại!";
+                statusLabel.innerText = "Đã kết nối";
                 statusLabel.classList.add('connected');
                 connectBtn.disabled = true;
                 document.querySelectorAll('button:disabled').forEach(btn => btn.disabled = false);
@@ -97,23 +96,24 @@
                 statusLabel.innerText = "Lỗi: " + error.message;
             }
         });
-
-        // HÀM ĐỌC DỮ LIỆU TỔNG HỢP
+// connectBtn
+// click
+        // doc du lieu
         document.getElementById('readDataBtn').addEventListener('click', async () => {
             if (!sensorChar || !timeChar) return;
 
             try {
-                // 1. Đọc thời gian (Uint32)
+                // Time
                 const timeData = await timeChar.readValue();
                 document.getElementById('timeValue').innerText = timeData.getUint32(0, true) + "s";
 
-                // 2. Đọc Nhiệt độ & Độ ẩm (Dạng chuỗi "temp \t humid")
+                // 2. temp va humid
                 const sensorData = await sensorChar.readValue();
                 const decoder = new TextDecoder('utf-8');
                 const decodedString = decoder.decode(sensorData);
                 console.log("Dữ liệu thô:", decodedString);
 
-                // Tách chuỗi dựa trên ký tự tab (\t)
+                // tao kcach nhau de tach temp va humid
                 const parts = decodedString.split('\t');
                 if (parts.length >= 2) {
                     document.getElementById('tempValue').innerText = parts[0].trim();
@@ -127,7 +127,7 @@
             }
         });
 
-        // HÀM ĐIỀU KHIỂN LED
+        // DK LED
         async function controlLed(state) {
             if (!ledChar) return;
             try {

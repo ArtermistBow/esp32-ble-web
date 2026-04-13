@@ -2,143 +2,168 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Potato Farm - Pro Farmer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BOB Farm - Realtime Monitor</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f7f1e3; text-align: center; color: #333; }
-        .farm-card { max-width: 500px; margin: 20px auto; background: #fff; padding: 25px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); border: 4px solid #d1ccc0; }
-        h1 { color: #8B4513; margin-bottom: 5px; }
-        .status { padding: 8px; border-radius: 10px; background: #eee; margin-bottom: 20px; font-weight: bold; font-size: 0.9rem; }
-        .connected { color: #2ecc71; background: #e8f9f0; }
+        :root { --main: #8B4513; --bg: #f7f1e3; --card: #ffffff; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); text-align: center; color: #333; padding: 20px; margin: 0; }
+        .farm-card { max-width: 450px; margin: auto; background: var(--card); padding: 25px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 4px solid #d1ccc0; }
+        h1 { color: var(--main); margin-bottom: 10px; font-size: 1.5rem; }
         
-        .grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
-        .sensor-box { padding: 15px; background: #fdfaf0; border-radius: 15px; border: 1px solid #ffeaa7; }
-        .sensor-label { font-size: 0.8rem; color: #666; text-transform: uppercase; display: block; }
-        .sensor-val { font-size: 1.8rem; color: #cd6133; font-weight: bold; }
+        /* Trạng thái kết nối */
+        .status { padding: 12px; border-radius: 12px; background: #eee; margin-bottom: 20px; font-weight: bold; border: 1px solid #ccc; transition: 0.3s; }
+        .connected { color: #2ecc71; background: #e8f9f0; border-color: #2ecc71; }
+        .disconnected { color: #e74c3c; background: #fdf2f2; border-color: #e74c3c; }
 
-        .section { margin: 15px 0; padding: 15px; border: 1px dashed #aaa; border-radius: 10px; }
-        button { padding: 12px 25px; font-size: 16px; border: none; border-radius: 8px; cursor: pointer; transition: 0.2s; font-weight: bold; width: 100%; margin-top: 10px; }
-        #connectBtn { background-color: #8B4513; color: white; }
-        #readDataBtn { background-color: #f39c12; color: white; }
-        .btn-led-on { background-color: #27ae60; color: white; }
-        .btn-led-off { background-color: #c0392b; color: white; }
-        button:disabled { background-color: #ccc; cursor: not-allowed; }
-        button:hover:not(:disabled) { opacity: 0.9; transform: scale(1.02); }
+        /* Lưới hiển thị cảm biến */
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
+        .box { padding: 20px; background: #fdfaf0; border-radius: 18px; border: 1px solid #ffeaa7; }
+        .label { font-size: 0.8rem; color: #7f8c8d; text-transform: uppercase; font-weight: bold; }
+        .val { font-size: 2.2rem; color: #cd6133; font-weight: 800; display: block; margin: 5px 0; }
+
+        /* Uptime section */
+        .uptime { margin-bottom: 25px; padding: 12px; background: #f0f3f4; border-radius: 15px; font-size: 1rem; }
+        #timeValue { font-weight: 900; color: var(--main); font-size: 1.3rem; }
+
+        /* Nút bấm */
+        button { padding: 15px; width: 100%; border-radius: 12px; border: none; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 1rem; }
+        #connectBtn { background: var(--main); color: white; margin-bottom: 15px; box-shadow: 0 4px #5d2e0d; }
+        #connectBtn:active { transform: translateY(4px); box-shadow: 0 0; }
+        
+        .controls { display: flex; gap: 10px; }
+        .btn-on { background: #27ae60; color: white; }
+        .btn-off { background: #c0392b; color: white; }
+        
+        button:disabled { background: #bdc3c7 !important; opacity: 0.6; cursor: not-allowed; box-shadow: none !important; transform: none !important; }
     </style>
 </head>
 <body>
-<!-- // navigator.bluetooth  -->
+
     <div class="farm-card">
-        <h1>ESP32 WEB BLE</h1>
-        <div id="statusLabel" class="status">Chưa kết nối Bluetooth</div>
+        <h1>B.O.B SMART MONITOR</h1>
+        <div id="statusLabel" class="status disconnected">Chưa kết nối thiết bị</div>
+        
+        <button id="connectBtn">KẾT NỐI HỆ THỐNG BOB</button>
 
-        <button id="connectBtn">Kết nối hệ thống BOB</button>
-
-        <div class="grid-container">
-            <div class="sensor-box">
-                <span class="sensor-label">Nhiệt độ</span>
-                <span id="tempValue" class="sensor-val">--</span><span class="sensor-val">°C</span>
+        <div class="grid">
+            <div class="box">
+                <span class="label">Nhiệt độ</span>
+                <span id="tempValue" class="val">--</span><small>°C</small>
             </div>
-            <div class="sensor-box">
-                <span class="sensor-label">Độ ẩm</span>
-                <span id="humidValue" class="sensor-val">--</span><span class="sensor-val">%</span>
+            <div class="box">
+                <span class="label">Độ ẩm</span>
+                <span id="humidValue" class="val">--</span><small>%</small>
             </div>
         </div>
 
-        <div class="section">
-            <span class="sensor-label">Thời gian hoạt động:</span>
-            <span id="timeValue" style="font-size: 1.2rem; font-weight: bold; color: #8B4513;">0s</span>
-            <button id="readDataBtn" disabled>Cập nhật toàn bộ cảm biến</button>
+        <div class="uptime">
+            Thời gian hoạt động: <span id="timeValue">0</span>s
         </div>
 
-        <div class="section">
-            <span class="sensor-label">Điều khiển LED:</span>
-            <div style="display: flex; gap: 10px;">
-                <button class="btn-led-on" id="ledOnBtn" disabled>BẬT</button>
-                <button class="btn-led-off" id="ledOffBtn" disabled>TẮT</button>
-            </div>
+        <div class="controls">
+            <button class="btn-on" id="onBtn" disabled>BẬT LED</button>
+            <button class="btn-off" id="offBtn" disabled>TẮT LED</button>
         </div>
     </div>
 
     <script>
+        // UUID - Phải trùng khớp 100% với ESP32
         const SERVICE_UUID = "3d88d953-7f54-47e4-a374-0db3dab7ea7c";
-        const TIME_CHAR_UUID = "b373a6bd-57ef-4ddb-801b-b08fda6c3fa7";
-        const LED_CHAR_UUID = "98edf6bd-db03-4077-9dde-d85fd41ead83";
-        const SENSOR_CHAR_UUID = "efc17762-aaf5-47cc-9df6-5244046cfc3b";
+        const TIME_UUID    = "b373a6bd-57ef-4ddb-801b-b08fda6c3fa7";
+        const LED_UUID     = "98edf6bd-db03-4077-9dde-d85fd41ead83";
+        const SENSOR_UUID  = "efc17762-aaf5-47cc-9df6-5244046cfc3b";
 
-        let timeChar, ledChar, sensorChar;
+        let bleDevice = null;
+        let ledChar = null;
 
         const connectBtn = document.getElementById('connectBtn');
         const statusLabel = document.getElementById('statusLabel');
 
         connectBtn.addEventListener('click', async () => {
             try {
-                const device = await navigator.bluetooth.requestDevice({
+                statusLabel.innerText = "Đang quét thiết bị...";
+                
+                // Quét thiết bị với tên lọc là "BOB"
+                bleDevice = await navigator.bluetooth.requestDevice({
                     filters: [{ name: "BOB" }],
                     optionalServices: [SERVICE_UUID]
                 });
 
-                statusLabel.innerText = "Đang kết nối...";
-                const server = await device.gatt.connect();
+                // Lắng nghe sự kiện khi mất kết nối
+                bleDevice.addEventListener('gattserverdisconnected', onDisconnected);
+
+                statusLabel.innerText = "Đang bắt tay với BOB...";
+                const server = await bleDevice.gatt.connect();
                 const service = await server.getPrimaryService(SERVICE_UUID);
 
-                // lay characteristic
-                timeChar = await service.getCharacteristic(TIME_CHAR_UUID);
-                ledChar = await service.getCharacteristic(LED_CHAR_UUID);
-                sensorChar = await service.getCharacteristic(SENSOR_CHAR_UUID);
+                // 1. Nhận dữ liệu Cảm biến (Notify tự động)
+                const sensorChar = await service.getCharacteristic(SENSOR_UUID);
+                await sensorChar.startNotifications();
+                sensorChar.addEventListener('characteristicvaluechanged', (e) => {
+                    const str = new TextDecoder().decode(e.target.value);
+                    const p = str.split('\t'); // Tách theo dấu Tab như sprintf trong ESP32
+                    if (p.length >= 2) {
+                        document.getElementById('tempValue').innerText = p[0].trim();
+                        document.getElementById('humidValue').innerText = p[1].trim();
+                    }
+                });
 
-                statusLabel.innerText = "Đã kết nối";
-                statusLabel.classList.add('connected');
+                // 2. Nhận dữ liệu Uptime (Notify tự động)
+                const timeChar = await service.getCharacteristic(TIME_UUID);
+                await timeChar.startNotifications();
+                timeChar.addEventListener('characteristicvaluechanged', (e) => {
+                    // Đọc giá trị 32-bit nhị phân từ ESP32 (Little Endian)
+                    const uptime = e.target.value.getUint32(0, true);
+                    document.getElementById('timeValue').innerText = uptime;
+                });
+
+                // 3. Thiết lập điều khiển LED
+                ledChar = await service.getCharacteristic(LED_UUID);
+
+                // Cập nhật giao diện khi thành công
+                statusLabel.innerText = "Hệ thống Trực tuyến";
+                statusLabel.className = "status connected";
                 connectBtn.disabled = true;
-                document.querySelectorAll('button:disabled').forEach(btn => btn.disabled = false);
-
-            } catch (error) {
-                console.error(error);
-                statusLabel.innerText = "Lỗi: " + error.message;
-            }
-        });
-// connectBtn
-// click
-        // doc du lieu
-        document.getElementById('readDataBtn').addEventListener('click', async () => {
-            if (!sensorChar || !timeChar) return;
-
-            try {
-                // Time
-                const timeData = await timeChar.readValue();
-                document.getElementById('timeValue').innerText = timeData.getUint32(0, true) + "s";
-
-                // 2. temp va humid
-                const sensorData = await sensorChar.readValue();
-                const decoder = new TextDecoder('utf-8');
-                const decodedString = decoder.decode(sensorData);
-                console.log("Dữ liệu thô:", decodedString);
-
-                // tao kcach nhau de tach temp va humid
-                const parts = decodedString.split('\t');
-                if (parts.length >= 2) {
-                    document.getElementById('tempValue').innerText = parts[0].trim();
-                    document.getElementById('humidValue').innerText = parts[1].trim();
-                } else if (decodedString.includes("loi")) {
-                    alert("Cảm biến DHT11 gặp lỗi hoặc chưa sẵn sàng!");
-                }
+                document.getElementById('onBtn').disabled = false;
+                document.getElementById('offBtn').disabled = false;
 
             } catch (err) {
-                console.error("Lỗi cập nhật:", err);
+                console.error(err);
+                statusLabel.innerText = "Lỗi kết nối: " + err.message;
+                statusLabel.className = "status disconnected";
             }
         });
 
-        // DK LED
-        async function controlLed(state) {
-            if (!ledChar) return;
-            try {
-                await ledChar.writeValueWithResponse(new Uint8Array([state]));
-                console.log("LED -> " + (state ? "ON" : "OFF"));
-            } catch (err) { console.error(err); }
+        // Xử lý khi ngắt kết nối
+        function onDisconnected() {
+            statusLabel.innerText = "Mất kết nối!";
+            statusLabel.className = "status disconnected";
+            connectBtn.disabled = false;
+            document.getElementById('onBtn').disabled = true;
+            document.getElementById('offBtn').disabled = true;
+            document.getElementById('tempValue').innerText = "--";
+            document.getElementById('humidValue').innerText = "--";
         }
 
-        document.getElementById('ledOnBtn').addEventListener('click', () => controlLed(1));
-        document.getElementById('ledOffBtn').addEventListener('click', () => controlLed(0));
+        // Gửi lệnh điều khiển LED
+        async function sendLed(val) {
+            if (ledChar) {
+                try {
+                    await ledChar.writeValue(new Uint8Array([val]));
+                    console.log("Đã gửi lệnh:", val);
+                } catch (e) { console.error("Lỗi gửi lệnh:", e); }
+            }
+        }
 
+        document.getElementById('onBtn').addEventListener('click', () => sendLed(1));
+        document.getElementById('offBtn').addEventListener('click', () => sendLed(0));
+
+        // Giải phóng GATT khi đóng trình duyệt
+        window.addEventListener('beforeunload', () => {
+            if (bleDevice && bleDevice.gatt.connected) {
+                bleDevice.gatt.disconnect();
+            }
+        });
     </script>
 </body>
 </html>
